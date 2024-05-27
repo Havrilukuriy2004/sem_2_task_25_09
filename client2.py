@@ -1,21 +1,20 @@
-import socket
+from client_base import BaseClient
+from protocol import CLIENT, QUESTION, ANSWER, END
 
-def client2_program():
-    host = '127.0.0.1'
-    port = 12345
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect((host, port))
-
-    try:
+class Client2(BaseClient):
+    def run(self):
+        self.send(CLIENT, "2")
         while True:
-            message = client_socket.recv(1024).decode('utf-8')
-            numbers = list(map(int, message.split()))
-            min_num = min(numbers)
-            max_num = max(numbers)
-            response = f"Min: {min_num}, Max: {max_num}"
-            client_socket.send(response.encode('utf-8'))
-    except:
-        client_socket.close()
+            cmd, param = self.receive()
+            if cmd == QUESTION:
+                min_max = self.process_numbers(param)
+                self.send(ANSWER, min_max)
+            elif cmd == END:
+                break
 
-if __name__ == '__main__':
-    client2_program()
+    def process_numbers(self, numbers):
+        nums = list(map(int, numbers.split()))
+        return f"{min(nums)} {max(nums)}"
+
+if __name__ == "__main__":
+    Client2("localhost", 12346)
